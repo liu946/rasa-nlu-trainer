@@ -39,7 +39,8 @@ export const fetchData = (
   payload: { path, data }
 })
 export const loadData = () => async (dispatch: Function): Promise<void> => {
-  const response: Object = await fetch(`${ROOT_PATH}data`, {
+  const file_path = window.location.href.split('?', 2)[1];
+  const response: Object = await fetch(`${ROOT_PATH}data?path=${file_path}`, {
     method: 'POST',
   })
   const json = await response.json()
@@ -50,7 +51,8 @@ export const SAVING_DONE = 'SAVING_DONE'
 export const save = (source: string): Function =>  async (
   dispatch: Function
 ): Promise<void> => {
-  const response = await fetch(`${ROOT_PATH}save`, {
+  const file_path = window.location.href.split('?', 2)[1];
+  const response = await fetch(`${ROOT_PATH}save?path=${file_path}`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',

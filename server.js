@@ -46,10 +46,13 @@ const argv = require('yargs')
   })
   .argv
 
-const sourceFile = {
-  path: '',
-  data: {},
-  isLoaded: false,
+const sourceFiles = {};
+function newSourceFile(path='', data={}, isLoaded=false) {
+   return {
+     path: path,
+     data: data,
+     isLoaded: isLoaded,
+   }
 }
 
 function readData(path) {
@@ -77,66 +80,31 @@ function readData(path) {
   })
 }
 
-if (argv.source) {
-  readData(argv.source)
-    .then(data => {
-      sourceFile.data = data,
-      sourceFile.path = argv.source
-      sourceFile.isLoaded = true
-      serve()
-    })
-    .catch(error => {
-      throw error
-    })
-}
-else {
-  console.log('searching for the training examples...')
-  var isSearchingOver = false;
-  var inReading = 0;
-
-  function checkDone() {
-    if (isSearchingOver && inReading === 0) {
-      if (!sourceFile.isLoaded) {
-        throw new Error(`Can't find training file, please try to specify it with the --source option`)
-      }
-      else {
-        serve()
-      }
-    }
+function extractFile(file) {
+  if (!sourceFiles[path.basename(file)]) {
+    readData(file)
+      .then(data => {
+        sourceFiles[path.basename(file)] = newSourceFile(file, data, true);
+        console.log(`found ${file}`);
+      }).catch(() => {})
+      .then(() => {})
   }
+  return sourceFiles[path.basename(file)]
+}
 
-  const finder = findit(process.cwd())
-  finder.on('directory', function (dir, stat, stop) {
-    var base = path.basename(dir);
-    if (base === '.git' || base === 'node_modules') stop()
-  })
-
+if (argv.source) {
+  const finder = findit(argv.source)
   finder.on('file', function (file) {
-    if (file.substr(-5) === '.json' && !sourceFile.isLoaded) {
-
-      inReading++
-      readData(file)
-        .then(data => {
-          if (!sourceFile.isLoaded) { // an other file could have been loaded in the meantime
-            sourceFile.data = data,
-            sourceFile.path = file
-            sourceFile.isLoaded = true
-            console.log(`found ${file}`)
-          }
-        })
-        .catch(() => {})
-        .then(() => {
-          inReading--
-          checkDone()
-        })
+    if (file.substr(-5) === '.json') {
+      extractFile(file);
     }
   })
-
-  finder.on('end', function () {
-    isSearchingOver = true
-    checkDone()
-  })
+} else {
+  const example_path = path.join(process.cwd(), 'src/state/testData.json');
+  sourceFiles[undefined] = extractFile(example_path);
 }
+
+serve();
 
 function serve() {
   // app.use(express.static('./build'))
@@ -160,26 +128,26 @@ function serve() {
 
   app.post('/data', function (req, res) {
     res.json({
-      data: sourceFile.data,
-      path: sourceFile.path,
+      data: sourceFiles[req.param('path')].data,
+      path: sourceFiles[req.param('path')].path,
     })
-  })
+  });
 
   app.post('/save', function (req, res) {
-    const data = req.body
+    const data = req.body;
     if (!data || !data.rasa_nlu_data) {
       res.json({error: 'file is invalid'})
     }
-    fs.writeFile(sourceFile.path, JSON.stringify(data, null, 2), (error) => {
+    fs.writeFile(sourceFiles[req.param('path')].path, JSON.stringify(data, null, 2), (error) => {
       if (error) {
         return res.json({error})
       }
-      readData(sourceFile.path)
-        .then(json => sourceFile.data = json)
+      readData(sourceFiles[req.param('path')].path)
+        .then(json => sourceFiles[req.param('path')].data = json)
         .catch(error => console.error(error))
         .then(() => res.json({ok: true}))
     })
-  })
+  });
 
   if (argv.port) {
     listen(argv.port)
@@ -193,7 +161,6 @@ function serve() {
     if (!argv.development) {
       const url = `http://localhost:${port}/`
       console.log(`server listening at ${url}`)
-      open(url)
     }
     else {
       console.log('dev server listening at', port)

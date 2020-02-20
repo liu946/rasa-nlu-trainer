@@ -4,7 +4,14 @@
       {
         "text": "hey",
         "intent": "greet",
-        "entities": []
+        "entities": [
+          {
+            "start": 1,
+            "end": 3,
+            "value": "ey",
+            "entity": "aaa"
+          }
+        ]
       },
       {
         "text": "howdy",
@@ -29,7 +36,14 @@
       {
         "text": "i'm looking for a place to eat",
         "intent": "restaurant_search",
-        "entities": []
+        "entities": [
+          {
+            "start": 18,
+            "end": 23,
+            "value": "place",
+            "entity": "location"
+          }
+        ]
       },
       {
         "text": "i'm looking for a place in the north of town",
@@ -58,12 +72,44 @@
       {
         "text": "yes",
         "intent": "affirm",
-        "entities": []
+        "entities": [
+          {
+            "start": 0,
+            "end": 3,
+            "value": "yes",
+            "entity": "aaa"
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "value": "s",
+            "entity": "ss"
+          }
+        ]
       },
       {
         "text": "yep",
         "intent": "affirm",
-        "entities": []
+        "entities": [
+          {
+            "start": 2,
+            "end": 3,
+            "value": "p",
+            "entity": "kk"
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "value": "p",
+            "entity": "joijoj"
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "value": "p",
+            "entity": ""
+          }
+        ]
       },
       {
         "text": "yeah",
@@ -178,6 +224,11 @@
       {
         "text": "great",
         "intent": "affirm",
+        "entities": []
+      },
+      {
+        "text": "",
+        "intent": "",
         "entities": []
       }
     ]
